@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>تبدیل HTML به سایت GitHub</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .upload-box { border: 2px dashed #ccc; padding: 20px; text-align: center; margin: 20px 0; }
+    #result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; }
+    .success { background-color: #d4edda; }
+    .error { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+  <h1>تبدیل فایل HTML به سایت GitHub</h1>
+  
+  <div class="upload-box">
+    <input type="file" id="htmlFile" accept=".html,.htm">
+    <button id="uploadBtn">آپلود و دریافت لینک</button>
+    <div id="loading" style="display: none;">در حال پردازش...</div>
+  </div>
+  
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('htmlFile');
+      if (!fileInput.files.length) return alert('لطفاً یک فایل انتخاب کنید');
+      
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('htmlFile', file);
+      
+      document.getElementById('loading').style.display = 'block';
+      
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          document.getElementById('result').innerHTML = `
+            <h3>سایت شما آماده است!</h3>
+            <p><a href="${result.url}" target="_blank">${result.url}</a></p>
+            <p>ریپوزیتوری: <a href="${result.repoUrl}" target="_blank">${result.repoUrl}</a></p>
+          `;
+          document.getElementById('result').className = 'success';
+        } else {
+          document.getElementById('result').innerHTML = `
+            <h3>خطا در ایجاد سایت</h3>
+            <p>${result.error || 'خطای ناشناخته'}</p>
+          `;
+          document.getElementById('result').className = 'error';
+        }
+      } catch (error) {
+        document.getElementById('result').innerHTML = `
+          <h3>خطا در ارتباط با سرور</h3>
+          <p>${error.message}</p>
+        `;
+        document.getElementById('result').className = 'error';
+      } finally {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
